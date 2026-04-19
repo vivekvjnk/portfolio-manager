@@ -1,0 +1,18 @@
+[project]
+name = "portfolio-agent"
+version = "0.1.0"
+description = "A portfolio management agent using the OpenHands SDK and Zerodha Kite MCP."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "openhands",
+    "pydantic",
+    "python-dotenv",
+]
+
+[tool.uv]
+package = false
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
