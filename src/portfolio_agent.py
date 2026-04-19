@@ -8,6 +8,7 @@ from openhands.sdk import (
     Agent,
     AgentContext,
     Conversation,
+    LLMSummarizingCondenser,
     Event,
     LLMConvertibleEvent,
     get_logger,
@@ -31,6 +32,9 @@ def main():
         base_url=base_url,
         api_key=SecretStr(api_key),
     )
+
+    condenser = LLMSummarizingCondenser(llm=llm, max_size=80, keep_first=8)
+
 
     # Load Skills from markdown files
     skills = []
@@ -87,7 +91,11 @@ def main():
     }
 
     # Initialize Agent
-    agent = Agent(llm=llm, tools=tools, mcp_config=mcp_config, agent_context=agent_context)
+    agent = Agent(llm=llm, 
+                  condenser=condenser,
+                  tools=tools, 
+                  mcp_config=mcp_config, 
+                  agent_context=agent_context)
 
     # Define a callback to handle displaying the agent's responses
     def conversation_callback(event: Event):
