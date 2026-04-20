@@ -16,6 +16,7 @@ from openhands.sdk import (
 from openhands.sdk.context import Skill, KeywordTrigger
 from openhands.sdk.tool import Tool
 from openhands.tools.terminal import TerminalTool
+from openhands.tools.file_editor import FileEditorTool
 
 logger = get_logger(__name__)
 
@@ -75,7 +76,8 @@ def main():
         Tool(
             name=TerminalTool.name,
             params={"no_change_timeout_seconds": 5},
-        )
+        ),
+        Tool(name=FileEditorTool.name),
     ]
 
     # Setup MCP Configuration for Zerodha
