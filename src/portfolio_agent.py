@@ -1,6 +1,6 @@
 import os
 import sys
-
+import uuid
 from pydantic import SecretStr
 
 from openhands.sdk import (
@@ -13,6 +13,7 @@ from openhands.sdk import (
     LLMConvertibleEvent,
     get_logger,
 )
+
 from openhands.sdk.context import Skill, KeywordTrigger
 from openhands.sdk.tool import Tool
 from openhands.tools.terminal import TerminalTool
@@ -20,9 +21,12 @@ from openhands.tools.file_editor import FileEditorTool
 
 logger = get_logger(__name__)
 
+# Use a fixed namespace/name to generate a deterministic UUID for this specific agent
+CONSISTENT_ID = uuid.uuid5(uuid.NAMESPACE_DNS, "portfolio-manager-agent-unique-id")
+
 def main():
     # Configure LLM
-    api_key = os.getenv("LLM_API_KEY",None)
+    api_key = os.getenv("LLM_API_KEY", None)
         
     model = os.getenv("LLM_MODEL", "anthropic/claude-sonnet-4-5-20250929")
     base_url = os.getenv("LLM_BASE_URL")
@@ -35,7 +39,6 @@ def main():
     )
 
     condenser = LLMSummarizingCondenser(llm=llm, max_size=80, keep_first=8)
-
 
     # Load Skills from markdown files
     skills = []
@@ -86,9 +89,8 @@ def main():
             "ZerodhaKite": {
                 "command": "npx",
                 "args":["mcp-remote","https://mcp.kite.trade/mcp",], 
-                "auth": "oauth", # Assuming OAuth based on the example
+                "auth": "oauth", 
             }
-
         }
     }
 
@@ -105,7 +107,6 @@ def main():
             msg = event.to_llm_message()
             # Only print messages from the assistant
             if msg.role == "assistant":
-                # Assuming msg.content is a list of blocks or a string
                 if isinstance(msg.content, list):
                     for block in msg.content:
                         if block.type == "text":
@@ -113,10 +114,12 @@ def main():
                 elif isinstance(msg.content, str):
                     print(f"\n[Agent]: {msg.content}")
 
-    # Initialize Conversation
+    # Initialize Conversation with a consistent ID to enable resumption
     cwd = f"{os.getcwd()}/workspace"
     conversation = Conversation(
         agent=agent, 
+        persistence_dir="./history",
+        conversation_id=CONSISTENT_ID,
         callbacks=[conversation_callback], 
         workspace=cwd
     )
@@ -124,6 +127,7 @@ def main():
     print("=" * 60)
     print("Welcome to the Portfolio Manager Agent CLI!")
     print("Supported operations: login, get profile, get holdings, analyse portfolio, etc.")
+    print("Type '/condense' to manually summarize history.")
     print("Type 'exit' or 'quit' to close the application.")
     print(f"Loaded {len(skills)} trading strategies as skills.")
     print("=" * 60)
@@ -132,12 +136,18 @@ def main():
     while True:
         try:
             user_input = input("\n[You]: ").strip()
-            if not user_input:
-                continue
+            # if not user_input:
+            #     continue
                 
             if user_input.lower() in ['exit', 'quit']:
                 print("Exiting Portfolio Manager Agent. Goodbye!")
                 break
+            
+            if user_input.lower() == "/condense":
+                print("Triggering manual condensation...")
+                conversation.condense()
+                print("Condensation successful!")
+                continue
                 
             # Send message and run
             conversation.send_message(user_input)

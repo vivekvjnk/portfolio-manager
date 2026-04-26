@@ -18,3 +18,4 @@ wheels/
 *.log
 *.lock
 */agent-requirements.md
+history/*
