@@ -53,7 +53,7 @@ The agent discovers and loads the following capability packages on demand:
 The agent follows a 3-phase daily procedure during each trading day session:
 
 ### Phase 1: Beginning of Day (BOD) — Assessment & Health Audit
-1. **Authentication Check**: Verify session with Zerodha Kite via `zerodha-kite-executor` (`tools/kite_cli.py status`).
+1. **Authentication Check & Live Data Sync**: Launch persistent synchronization via `zerodha-kite-executor` (`python3 .agents/skills/zerodha-kite-executor/tools/fetch_live_holdings.py > workspace/auth.log 2>&1 &`). Read `workspace/login_info.json` to present the active OAuth authorization link to the user. Once authorized, read real-time holdings from `workspace/live_holdings.json`.
 2. **Market Regime Determination**: Run `technical-regime-analyzer` (`tools/ta_indicators.py`) on Nifty 50.
    - If Nifty is **Trending Down** (below 20/50 EMA with ADX > 25): Enforce **HARD STOP** on new long entries.
 3. **Portfolio Health & Concentration Audit**: Run `portfolio-rebalancer` (`tools/portfolio_calc.py`).
